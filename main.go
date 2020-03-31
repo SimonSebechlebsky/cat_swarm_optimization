@@ -1,8 +1,5 @@
 package main
 
-import (
-	"fmt"
-)
 func main() {
-	fmt.Println("Meow")
+	LoadProblemDefinition("./inputs/a_example.in")
 }
