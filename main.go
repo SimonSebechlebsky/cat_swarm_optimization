@@ -1,5 +1,9 @@
 package main
 
+import (
+	"github.com/SimonSebechlebsky/cat_swarm_optimization/problem"
+)
+
 func main() {
-	LoadProblemDefinition("./inputs/a_example.in")
+	problem.LoadCarProblemDefinition("./inputs/a_example.in")
 }

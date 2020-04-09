@@ -1,4 +1,4 @@
-package main
+package cso
 
 type Mode int
 
@@ -22,8 +22,6 @@ type Cat struct {
 }
 
 type SolutionState struct {
+	Permutation []int
 }
 
-func Fitness(s SolutionState) int {
-	return 0
-}
