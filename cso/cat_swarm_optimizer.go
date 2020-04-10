@@ -24,4 +24,3 @@ type Cat struct {
 type SolutionState struct {
 	Permutation []int
 }
-

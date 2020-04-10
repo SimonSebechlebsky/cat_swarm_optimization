@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-const PermutationCarDelimiter  = -1
+const PermutationCarDelimiter = -1
 
 type Intersection struct {
 	Row    int
@@ -16,7 +16,6 @@ type Intersection struct {
 }
 
 type Car struct {
-	CurPos Intersection
 	Rides []*Ride
 }
 
@@ -47,7 +46,6 @@ func NewRide() Ride {
 
 func NewCar() Car {
 	car := Car{}
-	car.CurPos = Intersection{}
 	return car
 }
 
@@ -88,14 +86,13 @@ func LoadCarProblemDefinition(InputFilePath string) *CarProblemDefinition {
 	return &problemDef
 }
 
-
 func AssignCars(s cso.SolutionState, problemDef *CarProblemDefinition) []Car {
 	curCar := 0
 	var cars []Car
 	cars = append(cars, NewCar())
 
-	for i:= 0; i < len(s.Permutation); i++ {
-		if	s.Permutation[i] == PermutationCarDelimiter {
+	for i := 0; i < len(s.Permutation); i++ {
+		if s.Permutation[i] == PermutationCarDelimiter {
 			curCar++
 			cars = append(cars, NewCar())
 			continue
@@ -106,10 +103,9 @@ func AssignCars(s cso.SolutionState, problemDef *CarProblemDefinition) []Car {
 	return cars
 }
 
-
 func NewSolutionState(rideCount int, vehicleCount int) cso.SolutionState {
 
-	perm := rand.Perm(rideCount+vehicleCount-1)
+	perm := rand.Perm(rideCount + vehicleCount - 1)
 	for i, val := range perm {
 		if val >= rideCount {
 			perm[i] = PermutationCarDelimiter
@@ -120,20 +116,22 @@ func NewSolutionState(rideCount int, vehicleCount int) cso.SolutionState {
 	return s
 }
 
+func GetFitnessFunc(problemDef *CarProblemDefinition) func(state cso.SolutionState) int {
 
-func Fitness(s cso.SolutionState, problemDef *CarProblemDefinition) int {
-	fitness := 0
-	cars := AssignCars(s, problemDef)
-	fitnessChan := make(chan int, len(cars))
-	for _, car := range cars {
-		go CarFitnessWrapper(car, problemDef.Bonus, fitnessChan)
+	return func(s cso.SolutionState) int {
+		fitness := 0
+		cars := AssignCars(s, problemDef)
+		fitnessChan := make(chan int, len(cars))
+		for _, car := range cars {
+			go CarFitnessWrapper(car, problemDef.Bonus, fitnessChan)
+		}
+
+		for i := 0; i < len(cars); i++ {
+			fitness += <-fitnessChan
+		}
+
+		return fitness
 	}
-
-	for i:=0; i < len(cars); i++ {
-		fitness += <-fitnessChan
-	}
-
-	return fitness
 }
 
 func CarFitnessWrapper(car Car, bonus int, c chan int) {
@@ -141,33 +139,32 @@ func CarFitnessWrapper(car Car, bonus int, c chan int) {
 	c <- carFitness
 }
 
-
 func CarFitness(car Car, bonus int) int {
 	t := 0
 	carFitness := 0
+	curPos := Intersection{}
 	for _, ride := range car.Rides {
-		distanceToStart := Distance(car.CurPos, ride.Start)
+		distanceToStart := Distance(curPos, ride.Start)
 		rideDistance := Distance(ride.Start, ride.Dest)
-		destTime := t+distanceToStart+rideDistance
+		destTime := t + distanceToStart + rideDistance
 		if destTime > ride.LatestFinish {
 			continue
 		}
 		carFitness += rideDistance
 		if ride.EarliestStart >= t+distanceToStart {
 			carFitness += bonus
-			waitTime := ride.EarliestStart - (t+distanceToStart)
+			waitTime := ride.EarliestStart - (t + distanceToStart)
 			t += waitTime
 		}
-		t += distanceToStart+rideDistance
-		car.CurPos = ride.Dest
+		t += distanceToStart + rideDistance
+		curPos = ride.Dest
 	}
 
 	return carFitness
 }
 
-
 func Distance(i1 Intersection, i2 Intersection) int {
-	return Abs(i1.Column-i2.Column)+Abs(i1.Row-i2.Row)
+	return Abs(i1.Column-i2.Column) + Abs(i1.Row-i2.Row)
 }
 
 func Abs(x int) int {
@@ -176,4 +173,3 @@ func Abs(x int) int {
 	}
 	return x
 }
-
