@@ -126,16 +126,19 @@ func Fitness(s cso.SolutionState, problemDef *CarProblemDefinition) int {
 	cars := AssignCars(s, problemDef)
 	fitnessChan := make(chan int, len(cars))
 	for _, car := range cars {
-		go func() {
-			carFitness := CarFitness(car, problemDef.Bonus)
-			fitnessChan <- carFitness
-		}()
+		go CarFitnessWrapper(car, problemDef.Bonus, fitnessChan)
 	}
 
 	for i:=0; i < len(cars); i++ {
 		fitness += <-fitnessChan
 	}
+
 	return fitness
+}
+
+func CarFitnessWrapper(car Car, bonus int, c chan int) {
+	carFitness := CarFitness(car, bonus)
+	c <- carFitness
 }
 
 
@@ -152,8 +155,11 @@ func CarFitness(car Car, bonus int) int {
 		carFitness += rideDistance
 		if ride.EarliestStart >= t+distanceToStart {
 			carFitness += bonus
+			waitTime := ride.EarliestStart - (t+distanceToStart)
+			t += waitTime
 		}
-		//TODO rest of fitness
+		t += distanceToStart+rideDistance
+		car.CurPos = ride.Dest
 	}
 
 	return carFitness

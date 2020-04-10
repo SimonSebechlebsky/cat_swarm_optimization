@@ -2,13 +2,11 @@ package problem
 
 import (
 	"github.com/SimonSebechlebsky/cat_swarm_optimization/cso"
-	"math/rand"
 	"testing"
 )
 
 
 func TestAssignCars(t *testing.T) {
-	rand.Seed(0)
 	problemDef := LoadCarProblemDefinition("./inputs/a_example.in")
 	solState := cso.SolutionState{Permutation: []int {1, 2, PermutationCarDelimiter, 0}}
 	cars := AssignCars(solState, problemDef)
@@ -25,3 +23,78 @@ func TestAssignCars(t *testing.T) {
 	}
 
 }
+
+
+func TestCarFitness1(t *testing.T) {
+	problemDef := LoadCarProblemDefinition("./inputs/a_example.in")
+	solState := cso.SolutionState{Permutation: []int {0, PermutationCarDelimiter, 2, 1}}
+	cars := AssignCars(solState, problemDef)
+	fitness := CarFitness(cars[0], problemDef.Bonus)
+
+	if fitness != 6 {
+		t.Errorf("Expected 6 fitness points, got %d",  fitness)
+	}
+}
+
+
+func TestCarFitness2(t *testing.T) {
+	problemDef := LoadCarProblemDefinition("./inputs/a_example.in")
+	solState := cso.SolutionState{Permutation: []int {0, PermutationCarDelimiter, 2, 1}}
+	cars := AssignCars(solState, problemDef)
+	fitness := CarFitness(cars[1], problemDef.Bonus)
+
+	if fitness != 4 {
+		t.Errorf("Expected 6 fitness points, got %d",  fitness)
+	}
+}
+
+
+func TestCarFitnessSkipRide(t *testing.T) {
+	car := Car{
+		Rides: []*Ride{
+			{
+				Start: Intersection{
+					Row:    2,
+					Column: 2,
+				},
+				Dest: Intersection{
+					Row:    5,
+					Column: 7,
+				},
+				EarliestStart: 0,
+				LatestFinish: 10, //should skip this ride
+			},
+			{
+				Start: Intersection{
+					Row:    0,
+					Column: 0,
+				},
+				Dest: Intersection{
+					Row:    5,
+					Column: 5,
+				},
+				EarliestStart: 0,
+				LatestFinish: 10, //should skip this ride
+			},
+		},
+		CurPos: Intersection{},
+
+	}
+	fitness := CarFitness(car, 0)
+
+	if fitness != 10 {
+		t.Errorf("Expected 10 fitness points, got %d",  fitness)
+	}
+}
+
+
+func TestFitness(t *testing.T) {
+	problemDef := LoadCarProblemDefinition("./inputs/a_example.in")
+	solState := cso.SolutionState{Permutation: []int {0, PermutationCarDelimiter, 2, 1}}
+	fitness := Fitness(solState, problemDef)
+	if fitness != 10 {
+		t.Errorf("Expected 10 fitness points, got %d",  fitness)
+	}
+}
+
+
