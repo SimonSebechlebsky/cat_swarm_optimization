@@ -11,16 +11,80 @@ type CatSwarmOptimizer struct {
 	catNum       int
 	mixtureRatio float32 // ratio of cats in tracing and seeking mode
 	smp          int     // seeking memory pool - how many cat copies to spawn in seeking mode
-	srd          float32 // seeking range of the selected dimension - maximum range to mutate a dimension
-	cdc          int     //counts of dimension to change - how many dimensions will be varied
+	srd          int // seeking range of the selected dimension - maximum number of permutations in seeking mode
+	velocityLimit int // tracing mode velocity limit
 	cats         []Cat
 }
 
 type Cat struct {
 	mode Mode
-	SolutionState
+	state SolutionState
+	velocity Velocity
 }
 
 type SolutionState struct {
 	Permutation []int
 }
+
+type Velocity struct {
+	exchangeNodes []ExchangeNode
+}
+
+type ExchangeNode struct {
+	From int
+	To int
+}
+
+
+func (state SolutionState) MoveStateRandomly(srd int) SolutionState {
+	// Move state randomly of max srd permutations
+	return SolutionState{}
+}
+
+
+func (cat *Cat) Seek() {
+	// Do all the steps of seeking mode and set new SolutionState to cat
+}
+
+
+func (cat *Cat) Trace() {
+	// Do all the steps of tracing mode and set new SolutionState to cat
+}
+
+
+func (cat Cat) UpdateVelocity() Velocity {
+	// Velocity update formula from tracing mode (step1 in arcitcle)
+	return Velocity{}
+}
+
+
+func GetVelocity(s1 SolutionState, s2 SolutionState) Velocity {
+	//Calulates difference between 2 states, defined in Discrete Particle Swarm Optimization, illustrated by the Traveling Salesman Problem
+	return Velocity{}
+}
+
+
+func (velocity Velocity) MultiplyByFloat(f float32) Velocity {
+	// Multiplies velocity by float, defined in Discrete Particle Swarm Optimization, illustrated by the Traveling Salesman Problem
+	return Velocity{}
+}
+
+
+func (velocity Velocity) Add(velocity2 Velocity) Velocity {
+	// Get minimal velocity which is equal to velocity+velocity2
+	return Velocity{}
+}
+
+
+func (optimizer CatSwarmOptimizer) Optimize(steps int) SolutionState {
+	
+	return SolutionState{}
+}
+
+
+
+
+
+
+
+
