@@ -92,7 +92,7 @@ func AssignCars(s cso.SolutionState, problemDef *CarProblemDefinition) []Car {
 	cars = append(cars, NewCar())
 
 	for i := 0; i < len(s.Permutation); i++ {
-		if s.Permutation[i] == PermutationCarDelimiter {
+		if s.Permutation[i] <= PermutationCarDelimiter {
 			curCar++
 			cars = append(cars, NewCar())
 			continue
@@ -104,11 +104,13 @@ func AssignCars(s cso.SolutionState, problemDef *CarProblemDefinition) []Car {
 }
 
 func NewSolutionState(rideCount int, vehicleCount int) cso.SolutionState {
+	delimiterIdentifier := PermutationCarDelimiter
 
 	perm := rand.Perm(rideCount + vehicleCount - 1)
 	for i, val := range perm {
 		if val >= rideCount {
-			perm[i] = PermutationCarDelimiter
+			perm[i] = delimiterIdentifier
+			delimiterIdentifier -= 1
 		}
 	}
 	s := cso.SolutionState{}

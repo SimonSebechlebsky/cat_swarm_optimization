@@ -7,7 +7,7 @@ import (
 
 func TestAssignCars(t *testing.T) {
 	problemDef := LoadCarProblemDefinition("./inputs/a_example.in")
-	solState := cso.SolutionState{Permutation: []int{1, 2, PermutationCarDelimiter, 0}}
+	solState := cso.SolutionState{Permutation: []int{1, 2, -2, 0}}
 	cars := AssignCars(solState, problemDef)
 	if len(cars) != 2 {
 		t.Errorf("Expected 2 cars, got %d", len(cars))
@@ -25,7 +25,7 @@ func TestAssignCars(t *testing.T) {
 
 func TestCarFitness1(t *testing.T) {
 	problemDef := LoadCarProblemDefinition("./inputs/a_example.in")
-	solState := cso.SolutionState{Permutation: []int{0, PermutationCarDelimiter, 2, 1}}
+	solState := cso.SolutionState{Permutation: []int{0, -1, 2, 1}}
 	cars := AssignCars(solState, problemDef)
 	fitness := CarFitness(cars[0], problemDef.Bonus)
 
@@ -36,7 +36,7 @@ func TestCarFitness1(t *testing.T) {
 
 func TestCarFitness2(t *testing.T) {
 	problemDef := LoadCarProblemDefinition("./inputs/a_example.in")
-	solState := cso.SolutionState{Permutation: []int{0, PermutationCarDelimiter, 2, 1}}
+	solState := cso.SolutionState{Permutation: []int{0, -2, 2, 1}}
 	cars := AssignCars(solState, problemDef)
 	fitness := CarFitness(cars[1], problemDef.Bonus)
 
@@ -83,7 +83,7 @@ func TestCarFitnessSkipRide(t *testing.T) {
 
 func TestFitness(t *testing.T) {
 	problemDef := LoadCarProblemDefinition("./inputs/a_example.in")
-	solState := cso.SolutionState{Permutation: []int{0, PermutationCarDelimiter, 2, 1}}
+	solState := cso.SolutionState{Permutation: []int{0, -3, 2, 1}}
 	FitnessFunc := GetFitnessFunc(problemDef)
 	fitness := FitnessFunc(solState)
 	if fitness != 10 {
