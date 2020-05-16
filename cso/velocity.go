@@ -1,5 +1,9 @@
 package cso
 
+import (
+	"math"
+)
+
 //Array of swaps representing difference between two states
 type Velocity struct {
 	Swaps []Swap
@@ -74,7 +78,7 @@ func getPermutationCycles(perm1 []int, perm2 []int) [][]int {
 
 // Computes velocity in relationship to another state -
 // swaps that need to be made to get to that state
-func (state *SolutionState) GetVelocity(state2 SolutionState) Velocity {
+func (state SolutionState) GetVelocity(state2 SolutionState) Velocity {
 	permCycles := getPermutationCycles(state.Permutation, state2.Permutation)
 	swaps := make([]Swap, 0, 10)
 
@@ -87,8 +91,8 @@ func (state *SolutionState) GetVelocity(state2 SolutionState) Velocity {
 	return Velocity{Swaps: swaps}
 }
 
-//Apllies Array of swaps to SolutionState
-func (state *SolutionState) ApplyVelocity(velocity Velocity) SolutionState {
+//Applies Array of swaps to SolutionState
+func (state SolutionState) ApplyVelocity(velocity Velocity) SolutionState {
 	finalState := SolutionState{make([]int, len(state.Permutation))}
 	copy(finalState.Permutation, state.Permutation)
 	indexMap := createIndexMap(finalState.Permutation)
@@ -104,12 +108,48 @@ func (state *SolutionState) ApplyVelocity(velocity Velocity) SolutionState {
 	return finalState
 }
 
-func (velocity Velocity) MultiplyByFloat(f float32) Velocity {
-	// Multiplies velocity by float, defined in Discrete Particle Swarm Optimization, illustrated by the Traveling Salesman Problem
-	return Velocity{}
+//Float f needs to be positive
+func (velocity Velocity) MultiplyByFloat(f float64) Velocity {
+	intPart := int(math.Floor(f))
+	floatPart := f - float64(intPart)
+
+	newVelocity := velocity.Repeat(intPart)
+	newVelocity.Swaps = append(newVelocity.Swaps, velocity.Shrink(floatPart).Swaps...)
+
+	return newVelocity
 }
 
-func (velocity Velocity) Add(velocity2 Velocity) Velocity {
-	// Get minimal velocity which is equal to velocity+velocity2
-	return Velocity{}
+//Float f needs to be < 1
+func (velocity Velocity) Shrink(f float64) Velocity {
+	swapCount := int(math.Ceil(float64(len(velocity.Swaps)) * f))
+	velocity.Swaps = velocity.Swaps[:swapCount]
+	return velocity
+}
+
+// Outputs velocity which is equivalent to original velocity repeated n times
+func (velocity Velocity) Repeat(n int) Velocity {
+	if n == 0 {
+		return Velocity{[]Swap(nil)}
+	}
+
+	newVelocity := Velocity{make([]Swap, 0, len(velocity.Swaps)*(n+1))}
+	for i := 0; i < n; i++ {
+		newVelocity.Swaps = append(newVelocity.Swaps, velocity.Swaps...)
+	}
+	return newVelocity
+}
+
+//Outputs equivalent velocity with minimal length
+func (velocity Velocity) Minimize(stateGenerator func() SolutionState) Velocity {
+	state := stateGenerator()
+	finalState := state.ApplyVelocity(velocity)
+	minimizedVelocity := state.GetVelocity(finalState)
+	return minimizedVelocity
+}
+
+func (velocity Velocity) Add(velocity2 Velocity, stateGenerator func() SolutionState) Velocity {
+	var mergedSwaps []Swap = nil
+	copy(mergedSwaps, velocity.Swaps)
+	finalVelocity := Velocity{Swaps: append(mergedSwaps, velocity2.Swaps...)}
+	return finalVelocity.Minimize(stateGenerator)
 }

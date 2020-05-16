@@ -103,19 +103,24 @@ func AssignCars(s cso.SolutionState, problemDef *CarProblemDefinition) []Car {
 	return cars
 }
 
-func NewSolutionState(rideCount int, vehicleCount int) cso.SolutionState {
-	delimiterIdentifier := PermutationCarDelimiter
 
-	perm := rand.Perm(rideCount + vehicleCount - 1)
-	for i, val := range perm {
-		if val >= rideCount {
-			perm[i] = delimiterIdentifier
-			delimiterIdentifier -= 1
+func GetSolutionStateFunc(problemDef *CarProblemDefinition) func() cso.SolutionState {
+	
+	return func() cso.SolutionState {
+		delimiterIdentifier := PermutationCarDelimiter
+
+		perm := rand.Perm(problemDef.RideCount + problemDef.VehicleCount - 1)
+		for i, val := range perm {
+			if val >= problemDef.RideCount {
+				perm[i] = delimiterIdentifier
+				delimiterIdentifier -= 1
+			}
 		}
+		s := cso.SolutionState{}
+		s.Permutation = perm
+		return s
 	}
-	s := cso.SolutionState{}
-	s.Permutation = perm
-	return s
+
 }
 
 func GetFitnessFunc(problemDef *CarProblemDefinition) func(state cso.SolutionState) int {
