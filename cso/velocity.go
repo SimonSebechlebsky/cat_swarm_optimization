@@ -148,8 +148,8 @@ func (velocity Velocity) Minimize(stateGenerator func() SolutionState) Velocity 
 }
 
 func (velocity Velocity) Add(velocity2 Velocity, stateGenerator func() SolutionState) Velocity {
-	var mergedSwaps []Swap = nil
-	copy(mergedSwaps, velocity.Swaps)
-	finalVelocity := Velocity{Swaps: append(mergedSwaps, velocity2.Swaps...)}
+	mergedSwaps := append([]Swap(nil), velocity.Swaps...)
+	mergedSwaps = append(mergedSwaps, velocity2.Swaps...)
+	finalVelocity := Velocity{Swaps: mergedSwaps}
 	return finalVelocity.Minimize(stateGenerator)
 }

@@ -62,9 +62,8 @@ func TestAddVelocity(t *testing.T) {
 	minimizedVelocity := velocity1.Add(velocity2, mockSolutionGenerator)
 	startState := mockSolutionGenerator()
 	destState := startState.ApplyVelocity(minimizedVelocity)
-
 	expectedState := startState.ApplyVelocity(velocity1).ApplyVelocity(velocity2)
 
-
+	assert.Equal(t, len(minimizedVelocity.Swaps), 4)
 	assert.Equal(t, destState.Permutation, expectedState.Permutation)
 }
