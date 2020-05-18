@@ -5,9 +5,7 @@ import (
 )
 
 //Array of swaps representing difference between two states
-type Velocity struct {
-	Swaps []Swap
-}
+type Velocity []Swap
 
 type Swap struct {
 	From int
@@ -79,7 +77,7 @@ func getPermutationCycles(perm1 []int, perm2 []int) [][]int {
 // Computes velocity in relationship to another state -
 // swaps that need to be made to get to that state
 func (state SolutionState) GetVelocity(state2 SolutionState) Velocity {
-	permCycles := getPermutationCycles(state.Permutation, state2.Permutation)
+	permCycles := getPermutationCycles(state, state2)
 	swaps := make([]Swap, 0, 10)
 
 	for _, cycle := range permCycles {
@@ -88,22 +86,22 @@ func (state SolutionState) GetVelocity(state2 SolutionState) Velocity {
 			swaps = append(swaps, Swap{from, to})
 		}
 	}
-	return Velocity{Swaps: swaps}
+	return swaps
 }
 
 //Applies Array of swaps to SolutionState
 func (state SolutionState) ApplyVelocity(velocity Velocity) SolutionState {
-	finalState := SolutionState{make([]int, len(state.Permutation))}
-	copy(finalState.Permutation, state.Permutation)
-	indexMap := createIndexMap(finalState.Permutation)
+	finalState := SolutionState(make([]int, len(state)))
+	copy(finalState, state)
+	indexMap := createIndexMap(finalState)
 
-	for _, swap := range velocity.Swaps {
+	for _, swap := range velocity {
 		indexFrom := indexMap[swap.From]
 		indexTo := indexMap[swap.To]
 		indexMap[swap.From] = indexTo
 		indexMap[swap.To] = indexFrom
-		finalState.Permutation[indexFrom], finalState.Permutation[indexTo] =
-			finalState.Permutation[indexTo], finalState.Permutation[indexFrom]
+		finalState[indexFrom], finalState[indexTo] =
+			finalState[indexTo], finalState[indexFrom]
 	}
 	return finalState
 }
@@ -114,27 +112,27 @@ func (velocity Velocity) MultiplyByFloat(f float64) Velocity {
 	floatPart := f - float64(intPart)
 
 	newVelocity := velocity.Repeat(intPart)
-	newVelocity.Swaps = append(newVelocity.Swaps, velocity.Shrink(floatPart).Swaps...)
+	newVelocity = append(newVelocity, velocity.Shrink(floatPart)...)
 
 	return newVelocity
 }
 
 //Float f needs to be < 1
 func (velocity Velocity) Shrink(f float64) Velocity {
-	swapCount := int(math.Ceil(float64(len(velocity.Swaps)) * f))
-	velocity.Swaps = velocity.Swaps[:swapCount]
+	swapCount := int(math.Ceil(float64(len(velocity)) * f))
+	velocity = velocity[:swapCount]
 	return velocity
 }
 
 // Outputs velocity which is equivalent to original velocity repeated n times
 func (velocity Velocity) Repeat(n int) Velocity {
 	if n == 0 {
-		return Velocity{[]Swap(nil)}
+		return Velocity([]Swap(nil))
 	}
 
-	newVelocity := Velocity{make([]Swap, 0, len(velocity.Swaps)*(n+1))}
+	newVelocity := Velocity(make([]Swap, 0, len(velocity)*(n+1)))
 	for i := 0; i < n; i++ {
-		newVelocity.Swaps = append(newVelocity.Swaps, velocity.Swaps...)
+		newVelocity = append(newVelocity, velocity...)
 	}
 	return newVelocity
 }
@@ -148,8 +146,8 @@ func (velocity Velocity) Minimize(stateGenerator func() SolutionState) Velocity 
 }
 
 func (velocity Velocity) Add(velocity2 Velocity, stateGenerator func() SolutionState) Velocity {
-	mergedSwaps := append([]Swap(nil), velocity.Swaps...)
-	mergedSwaps = append(mergedSwaps, velocity2.Swaps...)
-	finalVelocity := Velocity{Swaps: mergedSwaps}
+	mergedSwaps := append([]Swap(nil), velocity...)
+	mergedSwaps = append(mergedSwaps, velocity2...)
+	finalVelocity := Velocity(mergedSwaps)
 	return finalVelocity.Minimize(stateGenerator)
 }

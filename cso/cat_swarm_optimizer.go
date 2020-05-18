@@ -41,27 +41,25 @@ type Cat struct {
 	Fitness 	   int
 }
 
-type SolutionState struct {
-	Permutation []int
-}
+type SolutionState []int
 
 func GetRandomVelocity(state SolutionState, srd int) Velocity {
 	randomSwapsCount := rand.Intn(srd)
 	swaps := make([]Swap, 0, randomSwapsCount)
 
 	for i := 0; i < randomSwapsCount; i++ {
-		from, to := rand.Intn(len(state.Permutation)), rand.Intn(len(state.Permutation))
+		from, to := rand.Intn(len(state)), rand.Intn(len(state))
 		for from == to {
-			from, to = rand.Intn(len(state.Permutation)), rand.Intn(len(state.Permutation))
+			from, to = rand.Intn(len(state)), rand.Intn(len(state))
 		}
-		swaps = append(swaps, Swap{state.Permutation[from], state.Permutation[to]})
+		swaps = append(swaps, Swap{state[from], state[to]})
 	}
-	return Velocity{Swaps: swaps}
+	return swaps
 }
 
 func (state SolutionState) MoveStateRandomly(srd int) SolutionState {
 	// Move state randomly of max srd permutations
-	RandomState := SolutionState{make([]int, len(state.Permutation))}
+	RandomState := SolutionState(make([]int, len(state)))
 	velocity := GetRandomVelocity(state, srd)
 
 	RandomState = state.ApplyVelocity(velocity)
@@ -146,8 +144,8 @@ func (cat *Cat) UpdateVelocity(bestState SolutionState) {
 	modifiedVelocity := bestVelocity.MultiplyByFloat(r * c)
 	newVelocity := cat.Vel.Add(modifiedVelocity, cat.StateGenerator)
 
-	if len(newVelocity.Swaps) > cat.VelocityLimit {
-		newVelocity.Swaps = newVelocity.Swaps[:cat.VelocityLimit]
+	if len(newVelocity) > cat.VelocityLimit {
+		newVelocity = newVelocity[:cat.VelocityLimit]
 	}
 	cat.Vel = newVelocity
 }
@@ -159,7 +157,7 @@ func (optimizer CatSwarmOptimizer) CreateCats() []Cat {
 		velocity := GetRandomVelocity(state, optimizer.VelocityLimit)
 		fitness := optimizer.FitnessFunc(state)
 
-		cats = append(cats, Cat{Mode: nil, State: state, Vel: velocity, VelocityLimit: optimizer.VelocityLimit,
+		cats = append(cats, Cat{Mode: SeekingMode, State: state, Vel: velocity, VelocityLimit: optimizer.VelocityLimit,
 			FitnessFunc: optimizer.FitnessFunc, StateGenerator: optimizer.StateGenerator, Fitness: fitness})
 	}
 
@@ -171,8 +169,6 @@ func SetMode(cats []Cat, mixtureRatio float64) []Cat {
 	for i, cat := range cats {
 		if i < tracingCatsCount {
 			cat.Mode = TracingMode
-		} else {
-			cat.Mode = SeekingMode
 		}
 	}
 	rand.Shuffle(len(cats), func(i, j int) {

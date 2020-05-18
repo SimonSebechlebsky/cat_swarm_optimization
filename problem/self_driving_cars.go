@@ -91,13 +91,13 @@ func AssignCars(s cso.SolutionState, problemDef *CarProblemDefinition) []Car {
 	var cars []Car
 	cars = append(cars, NewCar())
 
-	for i := 0; i < len(s.Permutation); i++ {
-		if s.Permutation[i] <= PermutationCarDelimiter {
+	for i := 0; i < len(s); i++ {
+		if s[i] <= PermutationCarDelimiter {
 			curCar++
 			cars = append(cars, NewCar())
 			continue
 		}
-		rideIndex := s.Permutation[i]
+		rideIndex := s[i]
 		cars[curCar].Rides = append(cars[curCar].Rides, &problemDef.Rides[rideIndex])
 	}
 	return cars
@@ -117,7 +117,7 @@ func GetSolutionStateFunc(problemDef *CarProblemDefinition) func() cso.SolutionS
 			}
 		}
 		s := cso.SolutionState{}
-		s.Permutation = perm
+		s = perm
 		return s
 	}
 
