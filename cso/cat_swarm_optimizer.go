@@ -2,6 +2,7 @@ package cso
 
 import (
 	wr "github.com/mroth/weightedrand"
+	"log"
 	"math"
 	"math/rand"
 	"time"
@@ -25,10 +26,9 @@ type CatSwarmOptimizer struct {
 	Smp            int     // seeking memory pool - how many cat copies to spawn in seeking mode
 	Srd            int     // seeking range of the selected dimension - maximum number of permutations in seeking mode
 	VelocityLimit  int     // tracing mode velocity limit
-	Cats           []Cat
 	FitnessFunc    func(state SolutionState) int
 	StateGenerator func() SolutionState
-	BestCat        *Cat
+	BestCat        Cat
 }
 
 type Cat struct {
@@ -166,9 +166,11 @@ func (optimizer CatSwarmOptimizer) CreateCats() []Cat {
 
 func SetMode(cats []Cat, mixtureRatio float64) []Cat {
 	tracingCatsCount := int(math.Round(mixtureRatio * float64(len(cats))))
-	for i, cat := range cats {
+	for i, _ := range cats {
 		if i < tracingCatsCount {
-			cat.Mode = TracingMode
+			cats[i].Mode = TracingMode
+		} else {
+			cats[i].Mode = SeekingMode
 		}
 	}
 	rand.Shuffle(len(cats), func(i, j int) {
@@ -177,34 +179,40 @@ func SetMode(cats []Cat, mixtureRatio float64) []Cat {
 	return cats
 }
 
-func FindBestCat(cats []Cat) *Cat {
-	bestCat := cats[0]
-	for _, cat := range cats {
-		if cat.Fitness > bestCat.Fitness {
-			bestCat = cat
+func FindBestCat(cats []Cat, bestCat *Cat) Cat {
+	for i, _ := range cats {
+		if cats[i].Fitness > bestCat.Fitness {
+			bestCat = &cats[i]
 		}
 	}
-	return &bestCat
+	bestCatCopy := *bestCat
+	bestCatCopy.State = SolutionState(nil)
+	bestCatCopy.State = append(bestCatCopy.State, bestCat.State...)
+	return bestCatCopy
 }
 
 func (optimizer CatSwarmOptimizer) Optimize(num int) SolutionState {
 	rand.Seed(time.Now().UnixNano())
 	cats := optimizer.CreateCats()
+	optimizer.BestCat = Cat{}
 
 	for i := 0; i < num; i++ {
 		cats = SetMode(cats, optimizer.MixtureRatio)
+		fitnessSum := 0
+		optimizer.BestCat = FindBestCat(cats, &optimizer.BestCat)
 
-		optimizer.BestCat = FindBestCat(cats)
-
-		for _, cat := range cats {
-			if cat.Mode == SeekingMode {
-				cat.Seek(optimizer.Smp, optimizer.Srd)
+		for i, _ := range cats {
+			if cats[i].Mode == SeekingMode {
+				cats[i].Seek(optimizer.Smp, optimizer.Srd)
 			} else {
-				cat.Trace(optimizer.BestCat)
+				cats[i].Trace(&optimizer.BestCat)
 			}
+			fitnessSum += cats[i].Fitness
 		}
+		log.Printf("Highest fitness in iteration %d: %d, average fitness in iteration %d: %f",
+			i+1, optimizer.BestCat.Fitness, i+1, float32(fitnessSum)/float32(len(cats)))
 	}
 
-	optimizer.BestCat = FindBestCat(cats)
+	optimizer.BestCat = FindBestCat(cats, &optimizer.BestCat)
 	return optimizer.BestCat.State
 }
