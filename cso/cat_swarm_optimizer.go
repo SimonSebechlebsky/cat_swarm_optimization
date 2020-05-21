@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"sync"
 	"time"
 )
 
@@ -193,6 +194,7 @@ func FindBestCat(cats []Cat, bestCat *Cat) Cat {
 
 func (optimizer CatSwarmOptimizer) Optimize(num int) SolutionState {
 	rand.Seed(time.Now().UnixNano())
+	wg := sync.WaitGroup{}
 	cats := optimizer.CreateCats()
 	optimizer.BestCat = Cat{}
 
@@ -202,13 +204,25 @@ func (optimizer CatSwarmOptimizer) Optimize(num int) SolutionState {
 		optimizer.BestCat = FindBestCat(cats, &optimizer.BestCat)
 
 		for i, _ := range cats {
-			if cats[i].Mode == SeekingMode {
-				cats[i].Seek(optimizer.Smp, optimizer.Srd)
-			} else {
-				cats[i].Trace(&optimizer.BestCat)
-			}
+			wg.Add(1)
+			cat := &cats[i]
+
+			go func(cat *Cat, optimizer *CatSwarmOptimizer, wg *sync.WaitGroup) {
+				defer wg.Done()
+
+				if cat.Mode == SeekingMode {
+					cat.Seek(optimizer.Smp, optimizer.Srd)
+				} else {
+					cat.Trace(&optimizer.BestCat)
+				}
+			}(cat, &optimizer, &wg)
+		}
+		wg.Wait()
+
+		for i, _ := range cats {
 			fitnessSum += cats[i].Fitness
 		}
+
 		log.Printf("Highest fitness in iteration %d: %d, average fitness in iteration %d: %f",
 			i+1, optimizer.BestCat.Fitness, i+1, float32(fitnessSum)/float32(len(cats)))
 	}
