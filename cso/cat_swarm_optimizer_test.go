@@ -1,29 +1,62 @@
 package cso_test
 
 import (
-    "fmt"
     "github.com/SimonSebechlebsky/cat_swarm_optimization/cso"
     "github.com/SimonSebechlebsky/cat_swarm_optimization/problem"
+    "io/ioutil"
+    "log"
+    "os"
     "testing"
 )
 
-func TestSeek(t *testing.T) {
+
+func TestMain(m *testing.M) {
+    log.SetOutput(ioutil.Discard)
+    os.Exit(m.Run())
+}
+
+
+//func TestSeek(t *testing.T) {
+//    problemDef := problem.LoadCarProblemDefinition("../problem/inputs/b_should_be_easy.in")
+//    FitnessFunc := problem.GetFitnessFunc(problemDef)
+//    SolutionStateFunc := problem.GetSolutionStateFunc(problemDef)
+//    state := SolutionStateFunc()
+//    //fmt.Println("state: ", state)
+//
+//    cat := cso.Cat{Mode: cso.SeekingMode, State: state, Vel: cso.Velocity{}, FitnessFunc: FitnessFunc}
+//    fitness := FitnessFunc(state)
+//
+//    for i := 0; i < 200; i++ {
+//        cat.Seek(50, 3)
+//        fitness = FitnessFunc(cat.State)
+//        fmt.Println(fitness, cat.State)
+//    }
+//
+//}
+
+
+func BenchmarkOptimization(b *testing.B) {
+
     problemDef := problem.LoadCarProblemDefinition("../problem/inputs/b_should_be_easy.in")
-    FitnessFunc := problem.GetFitnessFunc(problemDef)
-    SolutionStateFunc := problem.GetSolutionStateFunc(problemDef)
-    state := SolutionStateFunc()
-    fmt.Println("state: ", state)
+    fitnessFunc := problem.GetFitnessFunc(problemDef)
+    stateGenerator := problem.GetSolutionStateFunc(problemDef)
 
-    cat := cso.Cat{Mode: cso.SeekingMode, State: state, Vel: cso.Velocity{}, FitnessFunc: FitnessFunc}
-    fitness := FitnessFunc(state)
+    optimizer := cso.CatSwarmOptimizer{
+        CatNum:         20,
+        MixtureRatio:   0.7,
+        Smp:           	50,
+        Srd:            5,
+        VelocityLimit:  10,
+        FitnessFunc:    fitnessFunc,
+        StateGenerator: stateGenerator,
+    }
 
-    for i := 0; i < 200; i++ {
-        cat.Seek(50, 3)
-        fitness = FitnessFunc(cat.State)
-        fmt.Println(fitness, cat.State)
+    for i := 0; i < b.N; i++ {
+        optimizer.Optimize(1000)
     }
 
 }
+
 
 //func TestTrace(t *testing.T) {
 //    rand.Seed(time.Now().UnixNano())
