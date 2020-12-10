@@ -4,8 +4,18 @@ import (
     "fmt"
     "github.com/SimonSebechlebsky/cat_swarm_optimization/cso"
     "github.com/SimonSebechlebsky/cat_swarm_optimization/problem"
+    "io/ioutil"
+    "log"
+    "os"
     "testing"
 )
+
+
+func TestMain(m *testing.M) {
+    log.SetOutput(ioutil.Discard)
+    os.Exit(m.Run())
+}
+
 
 func TestSeek(t *testing.T) {
     problemDef := problem.LoadCarProblemDefinition("../problem/inputs/b_should_be_easy.in")
@@ -24,6 +34,30 @@ func TestSeek(t *testing.T) {
     }
 
 }
+
+
+func BenchmarkOptimization(b *testing.B) {
+
+    problemDef := problem.LoadCarProblemDefinition("../problem/inputs/b_should_be_easy.in")
+    fitnessFunc := problem.GetFitnessFunc(problemDef)
+    stateGenerator := problem.GetSolutionStateFunc(problemDef)
+
+    optimizer := cso.CatSwarmOptimizer{
+        CatNum:         20,
+        MixtureRatio:   0.7,
+        Smp:           	50,
+        Srd:            5,
+        VelocityLimit:  10,
+        FitnessFunc:    fitnessFunc,
+        StateGenerator: stateGenerator,
+    }
+
+    for i := 0; i < b.N; i++ {
+        optimizer.Optimize(1000)
+    }
+
+}
+
 
 //func TestTrace(t *testing.T) {
 //    rand.Seed(time.Now().UnixNano())
