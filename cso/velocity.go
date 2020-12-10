@@ -23,7 +23,7 @@ func UpdateState(state SolutionState, velocity Velocity) SolutionState {
 }
 
 func createIndexMap(nums []int) map[int]int {
-	indexMap := make(map[int]int)
+	indexMap := make(map[int]int, len(nums))
 	for i, val := range nums {
 		indexMap[val] = i
 	}

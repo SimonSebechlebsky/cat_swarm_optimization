@@ -88,7 +88,7 @@ func LoadCarProblemDefinition(InputFilePath string) *CarProblemDefinition {
 
 func AssignCars(s cso.SolutionState, problemDef *CarProblemDefinition) []Car {
 	curCar := 0
-	var cars []Car
+	cars := make([]Car, 0, problemDef.VehicleCount)
 	cars = append(cars, NewCar())
 
 	for i := 0; i < len(s); i++ {
@@ -128,23 +128,14 @@ func GetFitnessFunc(problemDef *CarProblemDefinition) func(state cso.SolutionSta
 	return func(s cso.SolutionState) int {
 		fitness := 0
 		cars := AssignCars(s, problemDef)
-		fitnessChan := make(chan int, len(cars))
 		for _, car := range cars {
-			go CarFitnessWrapper(car, problemDef.Bonus, fitnessChan)
-		}
-
-		for i := 0; i < len(cars); i++ {
-			fitness += <-fitnessChan
+			fitness += CarFitness(car, problemDef.Bonus)
 		}
 
 		return fitness
 	}
 }
 
-func CarFitnessWrapper(car Car, bonus int, c chan int) {
-	carFitness := CarFitness(car, bonus)
-	c <- carFitness
-}
 
 func CarFitness(car Car, bonus int) int {
 	t := 0
